@@ -271,6 +271,7 @@ function Printer(name) {
     console.error(
       name + ' printer does not exist ; installed printers are ' + Printer.list()
       );
+    throw new Error('Printer ' + name + ' does not exist on your system.');
   }
   self.name = name;
   self.jobs = [];
@@ -300,21 +301,21 @@ Printer.prototype.watch = function() {
   var lpq = spawn('lpq', args);
 
   lpq.stdout.on('data', function(data) {
-    data = parseStdout(data);
-    data.shift(2);
-    data = data.map(function(line) {
-      line = line.split(/[ ]{2,}/);
-      return {
-        rank: (line[0] === 'active' ? line[0] : parseInt(line[0].slice(0, -2))),
-        owner: line[1],
-        identifier: parseInt(line[2]),
-        files: line[3],
-        totalSize: line[4]
-      };
-    });
+    var parsedData = parseStdout(data)
+      .slice(2)
+      .map(function(line) {
+        line = line.split(/[ ]{2,}/);
+        return {
+          rank: (line[0] === 'active' ? line[0] : parseInt(line[0].slice(0, -2))),
+          owner: line[1],
+          identifier: parseInt(line[2]),
+          files: line[3],
+          totalSize: line[4]
+        };
+      });
 
     self.jobs.map(function(job) {
-      var status = data.filter(function(status) {
+      var status = parsedData.filter(function(status) {
         if (status.identifier === job.identifier) return status;
       })[0];
 
@@ -340,6 +341,8 @@ Printer.prototype.findJob = function(jobId) {
 Printer.prototype.printBuffer = function(data, options) {
   var self = this;
   var args = buildArgs(options);
+  args.push('-d', self.name);
+
   var lp = spawn('lp', args);
 
   lp.stdin.write(data);
@@ -357,12 +360,15 @@ Printer.prototype.printBuffer = function(data, options) {
   return job;
 };
 
+Printer.prototype.printText = Printer.prototype.printBuffer;
+
 Printer.prototype.printFile = function(filePath, options) {
   var self = this;
   var args = buildArgs(options);
+  args.push('-d', self.name);
 
   args.push('--');
-  args.push(file);
+  args.push(filePath);
 
   var lp = spawn('lp', args);
 

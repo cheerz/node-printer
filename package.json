@@ -1,7 +1,7 @@
 {
   "name": "node-printer",
   "description": "Create and manage one or multiple printers (w/ CUPS), send file path or node buffer with support for all lp options. Get feedback on jobs you sent.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "http://github.com/alepee/node-printer",
   "keywords": [
     "printer",
