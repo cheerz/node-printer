@@ -324,7 +324,7 @@ Printer.prototype.watch = function () {
         return {
           rank: (rankField === 'active' ? rankField : parseInt(rankField.slice(0, -2))),
           owner: getField("Owner"),
-          identifier: getField("Job"),
+          identifier: parseInt(getField("Job")),
           files: getField("File(s)"),
           totalSize: getField("Total Size")
         };
