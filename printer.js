@@ -301,27 +301,44 @@ Printer.prototype.watch = function() {
   var lpq = spawn('lpq', args);
 
   lpq.stdout.on('data', function(data) {
-    var parsedData = parseStdout(data)
+    console.log("Raw data: \n" + data.toString());
+
+    var parsedData = parseStdout(data);
+
+    var headerIndex = function(str) {
+      var headersString = parsedData[1];
+      var headerAry = headersString.trim().split(/[ ]{2,}/);
+      return headerAry.indexOf(str)
+    }
+
+    var parsedJob = parsedData
       .slice(2)
       .map(function(line) {
-        line = line.split(/[ ]{2,}/);
+        line = line.trim();
+        line = line.split(/[ ]{1,}/);
         return {
-          rank: (line[0] === 'active' ? line[0] : parseInt(line[0].slice(0, -2))),
-          owner: line[1],
-          identifier: parseInt(line[2]),
-          files: line[3],
-          totalSize: line[4]
+          rank: (line[headerIndex("Rank")] === 'active' ? line[headerIndex("Rank")] : parseInt(line[headerIndex("Rank")].slice(0, -2))),
+          owner: line[headerIndex("Owner")],
+          identifier: parseInt(line[headerIndex("Job")]),
+          files: line[headerIndex("File(s)")],
+          totalSize: line[headerIndex("Total Size")]
         };
       });
 
     self.jobs.map(function(job) {
-      var status = parsedData.filter(function(status) {
+      console.log(job);
+      var status = parsedJob.filter(function(status) {
+        console.log(status + ":" + status.identifier + " vs " + job.identifier);
         if (status.identifier === job.identifier) return status;
       })[0];
 
+      console.log(status);
+
       if (status) {
+        console.log("update");
         job.update(status);
       } else {
+        console.log("unqueue");
         job.unqueue();
       }
     });
