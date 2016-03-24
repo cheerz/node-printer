@@ -265,7 +265,8 @@ var parseStdout = function (data) {
     .split('\n');
 };
 
-function Printer(name) {
+function Printer(name, watch) {
+  watch = typeof watch !== 'undefined' ? watch : true;
   var self = this;
   if (!Printer.match(name)) {
     console.error(
@@ -275,7 +276,9 @@ function Printer(name) {
   }
   self.name = name;
   self.jobs = [];
-  self.watch();
+  if (watch) {
+    self.watch();
+  }
 }
 
 Printer.list = function () {
